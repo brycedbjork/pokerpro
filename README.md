@@ -29,8 +29,10 @@ FLASK_APP=application.py
 flask run (obviously)
 
 Details on the project as a whole...
-static includes all static files (css, js, images, etc.)
-templates includes the html templates that Flask uses
-archive includes old files that were used during development
-    I saved these because I thought it might be interesting to look at some of my past attempts (specifically back_attempt1.py)
-the back-end of this flask application is contained in back.py (application.py includes the line: from back import *)
+* static includes all static files (css, js, images, etc.)
+* templates includes the html templates that Flask uses
+* archive includes old files that were used during development
+    * I saved these because I thought it might be interesting to look at some of my past attempts (specifically back_attempt1.py)
+* the back-end of this flask application is contained in back.py (application.py includes the line: from back import *)
+* poker.db (the sqlite database file that allows the app to function) has been exclueded from Github because it is too large
+    * back.py includes the function used to build this database file
