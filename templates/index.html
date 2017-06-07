@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% set active_page = "index" %}
+
+{% block title %}
+	Home
+{% endblock %}
+
+{% block header %}
+	Welcome to Poker Pro!
+{% endblock %}
+
+{% block main %}
+	<div class="main-page-content">
+		<h2>What is Poker?</h2>
+		<p>Click <a href="https://en.wikipedia.org/wiki/Poker">here</a> for the Poker Wikipedia page.</p>
+	</div>
+	<div class="main-page-content">
+		<h2>What is Poker Pro?</h2>
+		<p>
+			Poker Pro is a Computer Science final project intended to better educate users on the probability of poker.<br/>
+			Poker Pro consists of two main pages: <a href="{{ url_for('learn') }}">Learn</a> and <a href="{{ url_for('play') }}">Play</a><br/>
+			<a href="{{ url_for('learn') }}">Learn</a> is a training tool where you interactively choose a hand and discover the probability of getting certain five card combinations.<br/>
+			<a href="{{ url_for('play') }}">Play</a> is a game where you have to estimate the probability of getting a certain combination given a starting hand of two cards.
+		</p>
+	</div>
+	<div class="main-page-content">
+		<h2>The different poker hands and ranking...</h2>
+		<br/>
+		<img src="{{ url_for('static', filename='poker-hands.jpg') }}"/>
+	</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% set active_page = "learn" %}
+
+{% block title %}
+	Learn
+{% endblock %}
+
+{% block header %}
+	Practice for the Poker Pro Challenge
+{% endblock %}
+
+{% block main %}
+	<div id="top-container">
+		<div id="hand-container">
+			<h2>Your selected hand will appear here...</h2>
+		</div>
+		<div id="odds-container"></div>
+	</div>
+
+	<div id="card-icon-container">
+		<h3>Select cards from the deck below</h3>
+	</div>
+{% endblock %}

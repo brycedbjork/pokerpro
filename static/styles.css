@@ -1,0 +1,139 @@
+body {
+    padding-bottom: 60px;
+}
+
+.main-page-content {
+    padding: 20px;
+}
+
+.card-icon {
+    width: 80px;
+    padding: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.card-icon-image {
+    width: 90%;
+    height: auto;
+    border-radius: 3px;
+    background-color: #fbfbfb;
+    border: 1px solid #f5f5f5;
+    padding: 3px;
+}
+
+.card-icon:hover {
+    width: 90px;
+    padding: 0px;
+    margin: 0px;
+    cursor: pointer;
+}
+
+#top-container {
+    overflow: auto;
+    min-height: 200px;
+}
+
+#hand-container {
+    min-height: 200px;
+    width: 60%;
+    float: left;
+}
+
+.hand-icon {
+    width: 120px;
+    padding: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.hand-icon-image {
+    width: 90%;
+    height: auto;
+    border-radius: 3px;
+    background-color: #fbfbfb;
+    border: 1px solid #f5f5f5;
+    padding: 3px;
+}
+
+.delete-card {
+    width: 80%;
+    margin: auto;
+    text-align: center;
+    padding: 5px;
+    background-color: #e2e2e2;
+    border-radius: 5px;
+}
+
+.delete-card:hover {
+    background-color: #d9d9d9;
+    cursor: pointer;
+}
+
+#odds-container {
+    width: 30%;
+    float: right;
+}
+
+.odds-line {
+    overflow: auto;
+    width: 70%;
+    padding: 5px 10px 5px 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #cacaca;
+}
+
+.odds-line-hand-type {
+    float: left;
+}
+
+.odds-line-probability {
+    float: right;
+}
+
+#play-top-container {
+    overflow: auto;
+    max-width: 700px;
+}
+
+#game-rules-container {
+    padding: 0 10px 10px 10px;
+    float: left;
+}
+
+#score-container {
+    float: right;
+}
+
+#game-play-container {
+    padding: 10px;
+}
+
+.game-play-card {
+    width: 120px;
+    padding: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.game-play-card-image {
+    width: 90%;
+    height: auto;
+    border-radius: 3px;
+    background-color: #fbfbfb;
+    border: 1px solid #f5f5f5;
+    padding: 3px;
+}
+
+#game-answer-container {
+    padding: 20px;
+}
+
+.game-answer-choice {
+    margin: 15px;
+    min-width: 150px;
+}

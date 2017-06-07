@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% set active_page = "play" %}
+
+{% block title %}
+	Play
+{% endblock %}
+
+{% block header %}
+	Play the Poker Pro Challenge!
+{% endblock %}
+
+{% block main %}
+	<div id="play-top-container">
+		<div id="game-rules-container">
+			<h3>How to Play...</h3>
+			<p>
+				You will be asked a question about the odds of getting a certain hand given the cards<br/>
+				Assume that you will only get five cards to make a five card hand<br/>
+				Answer the probability-based-question by selecting one of the three options.<br/>
+				Let the games begin!
+			</p>
+		</div>
+		<div id="score-container"></div>
+	</div>
+	<div id="game-play-container">
+		<a id="start-game-button" class="btn btn-default">Start Game!</a>
+	</div>
+	<div id="game-question-container"></div>
+	<div id="game-answer-container"></div>
+	<div id="game-timer"></div>
+{% endblock %}

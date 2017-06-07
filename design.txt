@@ -1,0 +1,171 @@
+Bryce Bjork
+Yale Class of 2020
+Poker Pro
+
+The design of Poker Pro can be split into two main categories: back-end and front-end
+
+BACK-END:
+
+Poker Pro's back-end is almost entirely located in back.py (a small amount of Flask python is located in application.py)
+At the beginning of back.py, I import all necessary python modules
+Throughout the entire application, cards are represented as integers from 1 to 52
+As such, the rank of a card can be represented as ((card_num - 1) % 13) + 1
+The python dictionary card_ranks takes the integer representation of a rank (say 13) and converts it to a traditional card rank (King)
+Similarly, the suit of a card can be represented as (card_num - 1) // 13, this will turn the card number into a number 0-3
+The python dictionary card_suits takes this suit integer and converts it to a traditional card suit.
+I also define the different poker hands (Royal Flush, Four of a Kind, etc.) in the python list hand_types
+
+The first function in back.py is identity
+identity takes in a list of cards and outputs the poker hand that those cards represent
+For a more detailed look into how I did that, check out the comments throughout identity
+
+Another function in back.py is possible_identity
+possible_identity takes in a list of cards and outputs the possible outcomes that those cards represent
+This allows us to run a one, two, three, or four card hand through possible_identity and see which outcomes are even feasible
+possible_identity is intended to speed up the analysis of a hand, as it eliminates calculating odds that aren't even possible.
+More information on how these odds are calculated will lie in the function analyze
+
+Before I go over analyze, it is appropriate to discuss the functions build_hands_db and build_possible_db
+In order to calculate the odds of certain poker hands, I first wanted to generate a database of all 5 card hands and their poker outcomes.
+build_hand_db does exactly this.
+It first creates all possible combinations of 5 card hands from a 52 card deck (of which there are 2598960)
+After creating those combinations, it creates the table 'hands' in the SQLite database 'poker.db'
+For each combination, I get the poker identity of the hand, link the sorted cards together into a string id
+(An example of this string id would be "0102030405" or "1112131420" – this will be important later)
+and insert the hand's identity into the database at its correlated string_id
+There are over 2.5 million rows in the hands database
+
+build_possible_db is very similar to build_hands_db.
+The difference is that the possible database holds all possible 1, 2, 3, and 4 card combinations and the
+possibility that they correlate to a certain hand (for example, "0102" would have straight_flush = True because
+it is possible to get a straight flush with the ace of hearts and the two of hearts)
+This database is meant to speed up the analysis, as the calculations that occur in possible_identity are tedious and time consuming
+
+The other table present in poker.db is matches
+matches is not a table that is built once in entirety, but rather a table that is constantly being added to as different hands are analysed
+for a given row in matches, you have a hand's string id (as above) and then for each poker outcome, the number of ways that those cards can
+be combined with the rest of the deck in order to reach that outcome.
+The purpose of the matches table is to expedite the analysis of commonly tested hands. (more of this in hand_matches)
+For example, if you wanted to analyze the hand "010203", and it had already been analyzed by someone, rather than reanalyze it,
+you can simply load the relevant analysis figures from the matches table.
+This also serves to make the Learn page far more responsive when deleting cards, as each time you add another card to
+the tested hand, the matches database saves the analysis of that partial hand.
+
+Now onto the analyze function – arguably the most significant function in the entire application
+The analyze function takes two arguments: hand and hand_type
+hand is a list of cards (represented by integers)
+hand_type is optional and is set by default to "all"
+You could also set hand_type to something like "royal_flush" and instead of returning all of the probabilities relevant
+to the submitted hand, the function would only return the probability of receiving a royal_flush
+This is useful in the Play page when we are only trying to calculate the odds for one type of outcome
+The analyze function starts by checking to make sure that valid arguments have been submitted.
+
+If the hand is an empty list, simply return the probabilities that are easily found with combinatorics
+
+The analyze function that counts the number of cards in the hand.
+If the hand is five cards, then it simply runs the hand through the identity function, converting boolean values to 1 or 0
+After connecting to the database, I create the hand's associated string id and check to see what outcomes are possible
+
+I then loop through the cards and construct a quite complex regular expression for searching the hands db.
+The purpose of this regex is to match the cards that I am analyzing with five card hands that contain those cards.
+The difficulty with this becomes accidentaly matching card 01 with hand "1012131415", so I only match in multiples of 2
+
+After building the regex, I quickly get an array of the card ranks and count the unique cards
+I do this in order to quickly see if a pair exists already in the hand (if there is a pair, the number of unique
+cards in the hand will be less than the total cards)
+If the hand_type is "all", I loop through every type of poker hand.
+For each poker hand, I first check whether or not it is even possible -> if it is impossible, I specify the odds at 0%
+I then check to see if I am calculating the odds of one_pair.
+Because many, many poker hands contain one_pair, it is very time consuming to loop through every possible one_pair id
+and try to match the regex of the cards we are analyzing.
+Instead of doing this, I realized that the possibility of getting one pair is the same for any combination of unique cards
+Therefore, I just calculated the odds one time through with varying hand length and saved the probabilities for quick analysis later
+If the hand is possible, and it is not one_pair, then I calculate the probability using the hand_matches function
+The probability of getting a hand in poker is equal to the number of ways to get that hand / total possible hands
+The process is the same if hand_type is not "all", but it only calculates the odds for one hand_type
+
+hand_matches is a function that takes in the db, the hand_type, the regex expression, and the string id
+using these inputs, the function checks to see how many ways there are to make a certain outcome with the given cards
+for the sake of minimizing time, it first checks to see if we have already calculated the number of ways to create
+this outcome with these specific cards.  If we have not, then it will add our current calculations to the db for
+future querying.
+If we cannot pull the answer from the database, hand_matches will query the hands database for all hand ids that
+have the specific outcome we are looking for.
+hand_matches then loops through these ids, checks to see if the cards we have are in these hands (using regex) and
+adds one to a counter if we have found a match.
+
+Other functions in back.py incude...
+describe – used mainly in development, takes a card's integer and prints the card's suit and rank to the console
+nCr – represents the choose function in combinatorics nCr(52, 5) = 2598960
+
+
+FRONT-END:
+
+The front end of Poker Pro is composed of four html files: layout.html, index.html, learn.html, and play.html
+index.html, learn.html, and play.html use flask to extend layout.html
+layout.html is based off of a bootstrap theme
+
+the most important files in the front end are the javascript
+there are three javascript files: scripts.js, learn.js, and play.js
+scripts.js includes all of the functions used on the client-side, and it is included in every page
+learn.js is only included in the learn page
+play.js is only included in the play page
+
+learn.js
+after making sure that the document has loaded...
+learn.js starts by initializing a global hand array
+it then generates the card icon selector (allowing users to visualize a deck of cards and select from them
+after creating the card icon selector, it attaches a click handler to each card icon which adds the clicked card
+to the hand if the hand is not already five cards and if the card does not already exist in the hand
+after adding the card to the hand, it calls the render_hand function (outlined in scripts.js)
+learn.js then generates the odds visualization by looping through the different hand types and creating the appropriate html
+finally, learn.js creates a global ajax_requests array to hold all outstanding ajax requests
+and learn.js calculates the odds associated with an empty hand
+
+play.js
+this is a file similar to learn.js, but with less going on
+again we initialize the global hand variable, but this time, we also initialize a global score dictionary with values
+"correct" and "total" set to 0
+finally, we attach a click handler to the start game button which calls the render_game function (outlined in scripts.js)
+
+scripts.js
+this javascript file starts by defining the card_ranks and card_suits – similar to how back.py did
+additionally, the dictionary hand_type_pretty is defined which takes some hand type and converts it
+into a form that is more user friend (for example, from royal_flush to Royal Flush)
+the first function is get_card_pic which generates the name of the png image for a given card's number
+
+the next function is render_hand. render_hand generates the selected hand on the learn page
+it starts by aborting any existing ajax requests, in order to free up the server of unnecessary calls
+it then resets the global ajax_requests array
+next, the hand container is emptied and then regenerated by looping through the global hand array
+after creating the cards in the hand, a click function is attached to the delete button below each card
+finally, the function ajax_odds is called, which generates and renders the odds given the global hand array
+
+before we get to ajax_odds, there is a function called prettify.  prettify simply takes a nasty looking number and
+makes it into a nice percentage for displaying to the user
+
+ajax_odds:
+takes as input the type of odds you wish to gather (for the learn page, this will always
+starts by showing a loading gif to the user in each probability line
+then submits an ajax form to the backend odds path
+after receiving the data from the server, it goes through and colors green if 100% (already have that outcome in hand)
+colors red if 0% (impossible to get that outcome), and adds the probability to each line
+finally, it adds the ajax request it made to the global list of ajax_requests
+
+ajax_play_odds:
+ajax play odds is similar to ajax_odds but built for the play page
+ajax_play_odds also contains a lot of game logic that only happens after the odds of the game's cards have been loaded
+this makes for a more seamless user experience, as all parts of the game load at the same time
+the function is thoroughly commented, so I will spare you the logistics.
+
+the next function is render_game
+this function does some setup for rendering the game, and eventually punts to ajax_play_odds for the bulk of the work
+
+the final two functions are get_random_card and get_random_hand
+javascript's Math.random function is harder to work with than python's, as it outputs a random number from 0 to 1
+(but not including one) as such, it takes some finagling to get the right range of random numbers
+
+with regards to the CSS of the front-end, I think that most of my decisions were self-explanatory (just trying to make
+the user experience as beautiful as possible)
+styles.css is the css that I wrote
+sticky-footer-navbar.css is the css from the bootstrap theme

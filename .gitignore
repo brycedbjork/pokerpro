@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.idea/
+poker.db
 
 # C extensions
 *.so
