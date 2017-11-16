@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .idea/
 poker.db
+archive/*
 
 # C extensions
 *.so

@@ -1,9 +1,5 @@
 from back import *
 
-from flask import Flask, jsonify, render_template, request, url_for
-
-# configure application
-app = Flask(__name__)
 
 # ensure responses aren't cached
 if app.config["DEBUG"]:
@@ -23,14 +19,13 @@ def index():
 
 @app.route("/odds/")
 def odds():
-	"""Returns offs given submitted hand"""
+	"""Returns odds given submitted hand"""
 	# check proper method
 	if request.method == "GET":
 		# check if cards arg exists
 		hand = json.loads(request.args["cards"])
 		hand_type = request.args["hand_type"]
 		return_odds = analyze(hand=hand, hand_type=hand_type)
-		print(return_odds)
 		return jsonify(return_odds)
 	# else return empty list
 	return jsonify([])

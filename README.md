@@ -25,8 +25,11 @@ Ideally, this game trains users to more accurately estimate the probability of c
 It is important to note that my game processes the probabilities of 5 card combinations (not 7 card as in Texas Hold'em)
 
 Regarding the Flask implementation...
-FLASK_APP=application.py
-flask run (obviously)
+````
+export FLASK_APP=application.py
+flask run
+````
+
 
 Details on the project as a whole...
 * static includes all static files (css, js, images, etc.)

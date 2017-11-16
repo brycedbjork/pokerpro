@@ -1,0 +1,5 @@
+google-cloud
+gunicorn
+flask
+pymysql
+flask_sqlalchemy

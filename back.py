@@ -2,10 +2,25 @@ from collections import Counter
 import math
 import itertools
 import time
-import sqlite3
 import re
 import json
 import textwrap
+import os
+from flask_sqlalchemy import SQLAlchemy
+
+from flask import Flask, jsonify, render_template, request, url_for
+
+# configure application
+app = Flask(__name__)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:Eh2tsCh3HkAOh96f@localhost/master?unix_socket=/cloudsql/poker-pro:us-central1:poker-pro"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+sql_app = SQLAlchemy(app)
+sql_app.init_app(app)
+
+db = sql_app.session()
+
 
 """
 Cards are defined by integers from 1 to 52
@@ -305,18 +320,12 @@ def analyze(hand, hand_type="all"):
 				odds[h_type] = 0
 		return odds
 
-	# connect to database
-	db = sqlite3.connect("poker.db")
-
 	# get hand id in string form
 	str_id = ''.join([str(num).zfill(2) for num in hand])
 
-	# optimize database rows
-	db.row_factory = sqlite3.Row
-
 	# first check the possible identity of the given hand
-	sql = "SELECT * FROM possible WHERE id = ?;"
-	possible = db.execute(sql, [str_id]).fetchone()
+	sql = "SELECT * FROM master.possible WHERE id = :id;"
+	possible = db.execute(sql, {"id": str_id}).fetchone()
 
 	# build regex statements that find cards in id strings from db
 	regex = ""
@@ -393,13 +402,13 @@ def analyze(hand, hand_type="all"):
 def hand_matches(db, hand_type, regex, str_id):
 
 	# check if we already have matches information
-	matches_sql_check = "SELECT * FROM matches WHERE id = ?;"
-	check = db.execute(matches_sql_check, [str_id]).fetchone()
+	matches_sql_check = "SELECT * FROM master.matches WHERE id = :id;"
+	check = db.execute(matches_sql_check, {"id": str_id}).fetchone()
 	# check if row exists
 	if check is None:
 		# if row doesnt exist, create it
-		matches_sql_insert = "INSERT INTO matches (id) VALUES(?);"
-		db.execute(matches_sql_insert, [str_id])
+		matches_sql_insert = "INSERT INTO master.matches (id) VALUES(:id);"
+		db.execute(matches_sql_insert, {"id": str_id})
 		db.commit()
 	elif check[hand_type] is not None:
 		# if we already have the right information, return that
@@ -409,7 +418,7 @@ def hand_matches(db, hand_type, regex, str_id):
 	# initialize counting variable
 	count = 0
 	# create sql string
-	sql = "SELECT id FROM hands WHERE " + hand_type + " = 1;"
+	sql = "SELECT id FROM master.hands WHERE " + hand_type + " = 1;"
 	# execute string
 	returned = db.execute(sql)
 	# count up hands that are matches
@@ -419,8 +428,8 @@ def hand_matches(db, hand_type, regex, str_id):
 		if match is not None:
 			count += 1
 	# put answer in db
-	matches_sql_update = "UPDATE matches SET " + hand_type + "=? WHERE id=?;"
-	db.execute(matches_sql_update, [count, str_id])
+	matches_sql_update = "UPDATE master.matches SET " + hand_type + "=:count WHERE id=:id;"
+	db.execute(matches_sql_update, {"count": count, "id": str_id})
 	db.commit()
 	return count
 
@@ -437,16 +446,13 @@ def build_hands_db():
 	# get length of combos
 	total_combos = nCr(52, 5)
 
-	# open connection to db
-	db = sqlite3.connect("poker.db")
-
 	# try to create table in db
-	sql = "CREATE TABLE 'hands' ('id' TEXT PRIMARY KEY NOT NULL, " \
-	      "'royal_flush' BOOLEAN, 'straight_flush' BOOLEAN, 'four_of_a_kind' " \
-	      "BOOLEAN, 'full_house' BOOLEAN, 'flush' BOOLEAN, 'straight' BOOLEAN, " \
-	      "'three_of_a_kind' BOOLEAN, 'two_pair' BOOLEAN, 'one_pair' BOOLEAN);"
-	try: db.execute(sql)
-	except: pass
+	# already created table
+	# sql = "CREATE TABLE 'hands' ('id' TEXT PRIMARY KEY NOT NULL, " \
+	#       "'royal_flush' BOOLEAN, 'straight_flush' BOOLEAN, 'four_of_a_kind' " \
+	#       "BOOLEAN, 'full_house' BOOLEAN, 'flush' BOOLEAN, 'straight' BOOLEAN, " \
+	#       "'three_of_a_kind' BOOLEAN, 'two_pair' BOOLEAN, 'one_pair' BOOLEAN);"
+	# db.execute(sql)
 
 	# initialize counter
 	counter = 0
@@ -464,26 +470,31 @@ def build_hands_db():
 		str_id = ''.join([str(num).zfill(2) for num in combo])
 
 		# create values for safe sql entry
-		values = (
-			str_id,
-			hid["royal_flush"],
-			hid["straight_flush"],
-			hid["four_of_a_kind"],
-			hid["full_house"],
-			hid["flush"],
-			hid["straight"],
-			hid["three_of_a_kind"],
-			hid["two_pair"],
-			hid["one_pair"]
-		)
+		values = {
+			"id": str_id,
+			"royal_flush": hid["royal_flush"],
+			"straight_flush": hid["straight_flush"],
+			"four_of_a_kind": hid["four_of_a_kind"],
+			"full_house": hid["full_house"],
+			"flush": hid["flush"],
+			"straight": hid["straight"],
+			"three_of_a_kind": hid["three_of_a_kind"],
+			"two_pair": hid["two_pair"],
+			"one_pair": hid["one_pair"]
+		}
+
+		sql = "INSERT INTO master.hands (id, royal_flush, straight_flush, four_of_a_kind, full_house, flush, " \
+	           "straight, three_of_a_kind, two_pair, one_pair) VALUES(:id, :royal_flush, :straight_flush, " \
+	           ":four_of_a_kind, :full_house, :flush, " \
+	           ":straight, :three_of_a_kind, :two_pair, :one_pair);"
+
 
 		# try to execute sql
 		try:
-			db.execute("INSERT INTO hands (id, royal_flush, straight_flush, four_of_a_kind, full_house, flush, " \
-			           "straight, three_of_a_kind, two_pair, one_pair) VALUES(?,?,?,?,?,?,?,?,?,?);", values)
+			db.execute(sql, values)
 			db.commit()
 		except:
-			pass
+			print("error: "+str_id)
 
 		# update output window
 		print("{:4f}".format(counter / total_combos))
@@ -541,23 +552,25 @@ def build_possible_db():
 		str_id = ''.join([str(num).zfill(2) for num in combo])
 
 		# create values for safe sql entry
-		values = (
-			str_id,
-			hid["royal_flush"],
-			hid["straight_flush"],
-			hid["four_of_a_kind"],
-			hid["full_house"],
-			hid["flush"],
-			hid["straight"],
-			hid["three_of_a_kind"],
-			hid["two_pair"],
-			hid["one_pair"]
-		)
+		values = {
+			"id": str_id,
+			"royal_flush": hid["royal_flush"],
+			"straight_flush": hid["straight_flush"],
+			"four_of_a_kind": hid["four_of_a_kind"],
+			"full_house": hid["full_house"],
+			"flush": hid["flush"],
+			"straight": hid["straight"],
+			"three_of_a_kind": hid["three_of_a_kind"],
+			"two_pair": hid["two_pair"],
+			"one_pair": hid["one_pair"]
+		}
 
 		# try to execute sql
 		try:
 			db.execute("INSERT INTO possible (id, royal_flush, straight_flush, four_of_a_kind, full_house, flush, " \
-			           "straight, three_of_a_kind, two_pair, one_pair) VALUES(?,?,?,?,?,?,?,?,?,?);", values)
+			           "straight, three_of_a_kind, two_pair, one_pair) VALUES(:id, :royal_flush, :straight_flush, "
+			           ":four_of_a_kind, :full_house, :flush, " \
+			           ":straight, :three_of_a_kind, :two_pair, :one_pair);", values)
 			db.commit()
 		except:
 			pass
@@ -591,60 +604,7 @@ def nCr(n, r):
 
 
 if __name__ == "__main__":
-	db = sqlite3.connect("poker.db")
 
+	build_hands_db()
 
-	# full_houses = db.execute("SELECT id FROM hands WHERE full_house=1;").fetchall()
-	# results = []
-	# for hand in full_houses:
-	# 	cards = textwrap.wrap(hand[0], 2)
-	# 	cards = [int(c) for c in cards]
-	# 	if sum(1 for c in cards if 1 <= c <= 13) > 1:
-	# 		continue
-	# 	if sum(1 for c in cards if ((c - 1) % 13) + 1 == 1) > 1:
-	# 		continue
-	# 	if sum(1 for c in cards if ((c - 1) % 13) + 1 == 2) > 2:
-	# 		continue
-	# 	results.append(cards)
-	# print(len(results))
-
-	# hands = db.execute("SELECT id FROM hands;").fetchall()
-	# results1 = []
-	# for hand in hands:
-	# 	cards = textwrap.wrap(hand[0], 2)
-	# 	cards = [int(c) for c in cards]
-	# 	if sum(((c - 1) % 13) + 1 for c in cards) != 32:
-	# 		continue
-	# 	if sum(1 for c in cards if 1 <= c <= 26) < 5:
-	# 		continue
-	# 	ranks = [((c - 1) % 13) + 1 for c in cards]
-	# 	if len(set(ranks)) < 5:
-	# 		continue
-	# 	results1.append(cards)
-	# print(len(results1))
-
-	straights = db.execute("SELECT id FROM hands WHERE straight_flush=1;").fetchall()
-	results2 = []
-	for hand in straights:
-		cards = textwrap.wrap(hand[0], 2)
-		cards = [int(c) for c in cards]
-		if sum(1 for c in cards if 1 <= c <= 13) != 4 and sum(1 for c in cards if 14 <= c <= 26) != 4:
-			continue
-		if sum(1 for c in cards if 27 <= c <= 52) != 1:
-			continue
-		results2.append(cards)
-	print(len(results2))
-
-	# hands = db.execute("SELECT id FROM hands;").fetchall()
-	# results3 = []
-	# for hand in hands:
-	# 	cards = textwrap.wrap(hand[0], 2)
-	# 	cards = [int(c) for c in cards]
-	# 	if sum(1 for c in cards if 1 <= c <= 13) != 4:
-	# 		continue
-	# 	if sum(1 for c in cards if 14 <= c <= 26) != 1:
-	# 		continue
-	# 	if not 12 <= sum(((c - 1) % 13) + 1 for c in cards) <= 26 and not 46 <= sum(((c - 1) % 13) + 1 for c in cards) <= 59:
-	# 		continue
-	# 	results3.append(cards)
-	# print(len(results3))
+	pass

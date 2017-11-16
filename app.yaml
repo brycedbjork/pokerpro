@@ -1,0 +1,19 @@
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT main:app
+
+runtime_config:
+  python_version: 3
+
+#[START env]
+env_variables:
+    # Replace user, password, database, and instance connection name with the values obtained
+    # when configuring your Cloud SQL instance.
+#[END env]
+
+#[START cloudsql_settings]
+# Replace project and instance with the values obtained  when configuring your
+# Cloud SQL instance.
+beta_settings:
+    cloud_sql_instances: poker-pro:us-central1:poker-pro
+#[END cloudsql_settings]
