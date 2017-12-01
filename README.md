@@ -1,7 +1,9 @@
-# pokerpro (CS50 Final Project)
+# pokerpro
 
 **Bryce Bjork,
 Yale Class of 2020**
+
+## poker.brycedbjork.com
 
 Video Presentation: https://youtu.be/lcENtXAL07Q
 
