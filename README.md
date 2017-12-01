@@ -3,7 +3,7 @@
 **Bryce Bjork,
 Yale Class of 2020**
 
-## poker.brycedbjork.com
+http://poker.brycedbjork.com
 
 Video Presentation: https://youtu.be/lcENtXAL07Q
 
