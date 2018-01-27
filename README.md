@@ -26,7 +26,7 @@ It is important to note that my game processes the probabilities of 5 card combi
 
 Regarding the Flask implementation...
 ````
-export FLASK_APP=application.py
+export FLASK_APP=main.py
 flask run
 ````
 
