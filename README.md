@@ -3,8 +3,6 @@
 **Bryce Bjork,
 Yale Class of 2020**
 
-http://poker.brycedbjork.com
-
 Video Presentation: https://youtu.be/lcENtXAL07Q
 
 Poker Pro is a Flask web application. The web application is composed of three main pages.
